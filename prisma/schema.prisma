@@ -12,3 +12,43 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+
+model User {
+  id          Int      @id @default(autoincrement())
+  username    String   @unique
+  email       String   @unique
+  password    String
+  wins        Int      @default(0)
+  losses      Int      @default(0)
+  games       Game[]
+
+  Invitation  Invitation[] @relation("sentInvitations")
+}
+
+model Game {
+  id           Int      @id @default(autoincrement())
+  player1Id    Int
+  player2Id    Int
+  winnerId     Int?
+  loserId      Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  player1 User @relation("player1Games", fields: [player1Id], references: [id])
+  player2 User @relation("player2Games", fields: [player2Id], references: [id])
+
+  User User[]
+}
+
+model Invitation {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  email      String
+  token      String
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("sentInvitations", fields: [senderId], references: [id])
+  receiver User @relation("receivedInvitations", fields: [receiverId], references: [id])
+}
