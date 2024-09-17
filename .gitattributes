@@ -1,2 +1,4 @@
 * linguist-vendored
 *.js linguist-vendored=false
+*.prisma linguist-vendored=prisma
+*.socket linguist-vendored=socket.io
