@@ -2,7 +2,7 @@ import express from 'express'
 import 'dotenv/config'
 import cors from 'cors'
 import morgan from "morgan"
-import authRoutes from './routes/auth.js'
+import authRoutes from './routes/authRoutes.js'
 import userRoutes from './routes/userRoutes.js'
 import gameRoutes from './routes/gameRoutes.js'
 import cookieParser from 'cookie-parser'
@@ -28,3 +28,4 @@ app.use("/game", gameRoutes)
 
 
 export default app
+
