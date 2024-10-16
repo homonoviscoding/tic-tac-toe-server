@@ -2,11 +2,9 @@
 import { createUser, generateToken, verifyUser } from "../utils/services.js"
 import { sendDataResponse, sendMessageResponse, sendErrorResponse } from "../utils/errorResponses.js"
 import jwt from "jsonwebtoken"
-import { StreamChat } from "stream-chat"
-import { JWT_SECRET, STREAM_API_KEY, STREAM_API_SECRET } from "../utils/config.js"
-import { validateSignup } from "../utils/validationFunctions.js"
+import { JWT_SECRET } from "../utils/config.js"
+import { validateSignup } from "../utils/validateFunctions.js"
 
-const chatClient = StreamChat.getInstance(STREAM_API_KEY, STREAM_API_SECRET)
 
 export const signup = async (req, res) => {
     const { email, username, password } = req.body
@@ -19,16 +17,9 @@ export const signup = async (req, res) => {
     try {
       const user = await createUser(email, username, password)
       const token = generateToken(user.id)
-      const streamToken = chatClient.createToken(user.id.toString())
   
-
-      await chatClient.upsertUser({
-        id: user.id.toString(),
-        name: username,
-        email: email
-      });
   
-      return sendDataResponse(res, 201, { token, streamToken, userId: user.id, username })
+      return sendDataResponse(res, 201, { token, userId: user.id, username })
     } catch (error) {
       return sendErrorResponse(res, 500, error.message)
     }
@@ -58,8 +49,8 @@ export const login = async (req, res) => {
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         })
 
-        console.log('Sending login response:', { token, streamToken, user: { id: user.id, email: user.email, username: user.username } })
-        return sendDataResponse(res, 200, { token, streamToken, user: { id: user.id, email: user.email, username: user.username } })
+        console.log('Sending login response:', { token, user: { id: user.id, email: user.email, username: user.username } })
+        return sendDataResponse(res, 200, { token, user: { id: user.id, email: user.email, username: user.username } })
     } catch (error) {
         console.error('Login error:', error)
         return sendErrorResponse(res, 500, error.message)

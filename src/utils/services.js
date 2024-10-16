@@ -2,7 +2,7 @@ import dbClient from "../utils/dbClient.js"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import { JWT_SECRET, JWT_EXPIRY } from "../utils/config.js"
-import { findUserByEmail } from "../domain/userQueries.js"
+import { findUserByEmail } from "../models/user.js"
 
 export const createUser = async (email, username, password) => {
   const hashedPassword = await bcrypt.hash(password, 10)

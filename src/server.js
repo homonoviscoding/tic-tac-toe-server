@@ -4,7 +4,7 @@ import cors from 'cors'
 import morgan from "morgan"
 import authRoutes from './routes/authRoutes.js'
 import userRoutes from './routes/userRoutes.js'
-import gameRoutes from './routes/gameRoutes.js'
+// import gameRoutes from './routes/gameRoutes.js'
 import cookieParser from 'cookie-parser'
 
 
@@ -24,7 +24,7 @@ app.use(cookieParser())
 // routes
 app.use("/auth", authRoutes)
 app.use("/users", userRoutes)
-app.use("/game", gameRoutes)
+// app.use("/game", gameRoutes)
 
 
 export default app
