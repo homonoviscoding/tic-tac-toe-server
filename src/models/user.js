@@ -3,19 +3,20 @@ import dbClient from "../utils/dbClient.js"
 
 
 export const getUserById = async (id) => {
-  return dbClient.user.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      username: true,
-      email: true,
-      avatar: true,
-      points: true,
-      status: true,
-      createdAt: true,
-      profileData: true,
-    },
-  })
+  try {
+    return await dbClient.user.findUnique({
+      where: { id: String(id) },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        createdAt: true
+      },
+    })
+  } catch (error) {
+    console.error('Error finding user by ID:', error)
+    throw error
+  }
 }
 
 export const updateUser = async (id, data) => {

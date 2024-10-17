@@ -1,9 +1,8 @@
-
-import { createUser, generateToken, verifyUser } from "../utils/services.js"
+import { createUser, generateToken, verifyUser, generateResetToken, updatePasswordWithToken, generateNewAccessToken } from "../utils/services.js"
 import { sendDataResponse, sendMessageResponse, sendErrorResponse } from "../utils/errorResponses.js"
 import jwt from "jsonwebtoken"
 import { JWT_SECRET } from "../utils/config.js"
-import { validateSignup } from "../utils/validateFunctions.js"
+import { validateSignup, validateLogin } from "../utils/validateFunctions.js"
 
 
 export const signup = async (req, res) => {
@@ -18,7 +17,6 @@ export const signup = async (req, res) => {
       const user = await createUser(email, username, password)
       const token = generateToken(user.id)
   
-  
       return sendDataResponse(res, 201, { token, userId: user.id, username })
     } catch (error) {
       return sendErrorResponse(res, 500, error.message)
@@ -26,11 +24,11 @@ export const signup = async (req, res) => {
 }
 
 export const login = async (req, res) => {
-    console.log('Login request received:', req.body)
     const { email, password } = req.body
 
-    if (!email || !password) {
-        return sendMessageResponse(res, 400, "Email and password are required")
+    const validationErrors = validateLogin(email, password)
+    if (validationErrors.length > 0) {
+      return sendMessageResponse(res, 400, validationErrors.join(", "))
     }
 
     try {
@@ -40,7 +38,6 @@ export const login = async (req, res) => {
         }
 
         const token = generateToken(user.id)
-        const streamToken = chatClient.createToken(user.id.toString())
 
         res.cookie('token', token, {
             httpOnly: true,
@@ -49,7 +46,6 @@ export const login = async (req, res) => {
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         })
 
-        console.log('Sending login response:', { token, user: { id: user.id, email: user.email, username: user.username } })
         return sendDataResponse(res, 200, { token, user: { id: user.id, email: user.email, username: user.username } })
     } catch (error) {
         console.error('Login error:', error)
@@ -82,9 +78,6 @@ export const logout = async (req, res) => {
 
     try {
         console.log('Attempting to revoke token for user:', userId)
-        if (userId) {
-            await chatClient.revokeUserToken(userId.toString())
-        }
         res.clearCookie('token', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -93,7 +86,6 @@ export const logout = async (req, res) => {
         return sendMessageResponse(res, 200, "Logged out successfully")
     } catch (error) {
         console.error('Logout error:', error)
-        // Even if Stream revocation fails, we should still clear the cookie
         res.clearCookie('token', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -101,4 +93,35 @@ export const logout = async (req, res) => {
         })
         return sendErrorResponse(res, 500, `Logout partially failed: ${error.message}`)
     }
+}
+
+export const requestPasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body
+    const resetToken = await generateResetToken(email)
+    await sendPasswordResetEmail(email, resetToken)
+    return sendMessageResponse(res, 200, "Password reset email sent")
+  } catch (error) {
+    return sendErrorResponse(res, 500, error.message)
+  }
+}
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body
+    await updatePasswordWithToken(token, newPassword)
+    return sendMessageResponse(res, 200, "Password reset successful")
+  } catch (error) {
+    return sendErrorResponse(res, 400, error.message)
+  }
+}
+
+export const refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body
+    const newAccessToken = await generateNewAccessToken(refreshToken)
+    return sendDataResponse(res, 200, { accessToken: newAccessToken })
+  } catch (error) {
+    return sendErrorResponse(res, 401, "Invalid refresh token")
+  }
 }
